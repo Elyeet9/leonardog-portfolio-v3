@@ -1,26 +1,958 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Void (purple black) palette */
+@theme {
+  --color-bg: #0d0a14;
+  --color-panel: #16111f;
+  --color-ink: #dccff3;
+  --color-mute: #9a8bb8;
+  --color-sel-bg: #5b34a8;
+  --color-sel-ink: #f1eaff;
+  --color-line: rgba(176, 140, 236, 0.4);
+  --color-dot: rgba(176, 140, 236, 0.1);
+  --color-accent: #a66bff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-josefin), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    line-height: normal;
+    color-scheme: dark;
+  }
+  body {
+    color: var(--color-ink);
+    background-color: var(--color-bg);
+    background-image: radial-gradient(var(--color-dot) 1px, transparent 1.2px);
+    background-size: 14px 14px;
+  }
+  button {
+    cursor: pointer;
+    text-align: left;
+  }
+  :focus-visible {
+    outline: 2px dashed var(--color-ink);
+    outline-offset: 3px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .nier {
+    --hp: 32px;
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+  }
+  .sq {
+    width: 8px;
+    height: 8px;
+    background: currentColor;
+    transform: rotate(45deg);
+    flex: none;
+  }
+
+  /* ---------- top bar tabs ---------- */
+  .navtab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 15px;
+    letter-spacing: 0.12em;
+    font-size: 13px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    position: relative;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+  .navtab .num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    opacity: 0.75;
+    transition: opacity 0.3s ease;
+  }
+  .navtab > span {
+    position: relative;
+  }
+  .navtab::before {
+    content: "";
+    position: absolute;
+    /* Overlaps the border (same color when selected) so no subpixel seam shows between them. */
+    inset: -1px;
+    background: var(--color-sel-bg);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.7, 0, 0.3, 1);
+  }
+  .navtab::after {
+    content: "";
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    bottom: 7px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.2s ease;
+  }
+  .navtab:hover::after,
+  .navtab:focus-visible::after {
+    transform: scaleX(1);
+  }
+  .navtab.on::after {
+    opacity: 0;
+  }
+  .navtab:hover .num {
+    opacity: 1;
+  }
+  .navtab:hover {
+    border-color: var(--color-ink);
+  }
+  .navtab.on {
+    color: var(--color-sel-ink);
+    border-color: var(--color-sel-bg);
+  }
+  .navtab.on::before {
+    transform: scaleX(1);
+  }
+
+  /* ---------- language switch ---------- */
+  .lg {
+    display: inline-flex;
+    align-items: stretch;
+    min-height: 44px;
+    border: 1px solid var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+  }
+  .lg > span {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    min-width: 44px;
+    justify-content: center;
+    transition: background 0.25s, color 0.25s;
+  }
+  .lg > span.on {
+    background: var(--color-sel-bg);
+    color: var(--color-sel-ink);
+  }
+  .lg:hover > span:not(.on) {
+    background: rgba(166, 107, 255, 0.22);
+  }
+
+  /* ---------- menu rows ---------- */
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--color-line);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  .row .sq {
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.7, 0, 0.3, 1);
+  }
+  .row:hover {
+    background: rgba(166, 107, 255, 0.18);
+  }
+  .row:hover .sq {
+    transform: rotate(225deg);
+    opacity: 0.6;
+  }
+  .row.on {
+    background: var(--color-sel-bg);
+    color: var(--color-sel-ink);
+  }
+  .row.on .sq {
+    opacity: 1;
+  }
+  .row .tag {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    opacity: 0.8;
+    letter-spacing: 0.08em;
+  }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 22px;
+    border: 1px solid var(--color-ink);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: var(--color-ink);
+    text-decoration: none;
+    background: transparent;
+    transition: color 0.3s ease;
+  }
+  .btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--color-sel-bg);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.7, 0, 0.3, 1);
+  }
+  .btn:hover::before,
+  .btn:focus-visible::before {
+    transform: scaleX(1);
+  }
+  .btn:hover,
+  .btn:focus-visible {
+    color: var(--color-sel-ink);
+  }
+  .btn.solid::before {
+    transform: scaleX(1);
+    transform-origin: right;
+  }
+  .btn.solid:hover::before,
+  .btn.solid:focus-visible::before {
+    transform: scaleX(0);
+  }
+  .btn.solid {
+    color: var(--color-sel-ink);
+  }
+  .btn.solid:hover,
+  .btn.solid:focus-visible {
+    color: var(--color-ink);
+  }
+  .btn .sq {
+    transition: transform 0.35s cubic-bezier(0.7, 0, 0.3, 1);
+  }
+  .btn:hover .sq {
+    transform: rotate(225deg);
+  }
+
+  /* ---------- surfaces ---------- */
+  .panel {
+    border: 1px solid var(--color-line);
+    background: var(--color-panel);
+  }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+  }
+  .chip {
+    border: 1px solid var(--color-line);
+    padding: 4px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+  .hatch {
+    background-image: repeating-linear-gradient(135deg, var(--color-line) 0 1px, transparent 1px 10px);
+  }
+  .gauge {
+    position: relative;
+    height: 10px;
+    border: 1px solid var(--color-ink);
+  }
+  .gauge::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0 calc(20% - 2px),
+      var(--color-panel) calc(20% - 2px) 20%
+    );
+  }
+  .gauge > div {
+    height: 100%;
+    background: var(--color-ink);
+  }
+  .field {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--color-ink);
+    background: transparent;
+    border: 1px solid var(--color-ink);
+    border-radius: 0;
+  }
+  .blink {
+    animation: blink 1.1s steps(2, start) infinite;
+  }
+
+  /* ---------- section content: staggered entrance, starts once the wipe is uncovering ---------- */
+  .pane > * {
+    animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: 0.2s;
+  }
+  .pane > *:nth-child(2) {
+    animation-delay: 0.34s;
+  }
+  .pane > *:nth-child(3) {
+    animation-delay: 0.48s;
+  }
+  .panel > .row {
+    animation: slide 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .panel > .row:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+  .panel > .row:nth-child(3) {
+    animation-delay: 0.46s;
+  }
+  .panel > .row:nth-child(4) {
+    animation-delay: 0.52s;
+  }
+  .panel > .row:nth-child(5) {
+    animation-delay: 0.58s;
+  }
+  .panel > .row:nth-child(6) {
+    animation-delay: 0.64s;
+  }
+  .panel > .row:nth-child(7) {
+    animation-delay: 0.7s;
+  }
+  .panel > .row:nth-child(8) {
+    animation-delay: 0.76s;
+  }
+  .panel > .row:nth-child(9) {
+    animation-delay: 0.82s;
+  }
+  .panel > .row:nth-child(n + 10) {
+    animation-delay: 0.88s;
+  }
+
+  /* ---------- A/B classes: swapping them restarts an animation without a reflow trick ---------- */
+  .fxg.fxa {
+    animation: glitchA 0.6s both;
+  }
+  .fxg.fxb {
+    animation: glitchB 0.6s both;
+  }
+  .fxs.fxa .gauge > div {
+    transform-origin: left;
+    animation: growA 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .fxs.fxb .gauge > div {
+    transform-origin: left;
+    animation: growB 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .fxs.fxa .srow {
+    animation: slideA 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .fxs.fxb .srow {
+    animation: slideB 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .srow:nth-child(2) {
+    animation-delay: 0.06s !important;
+  }
+  .srow:nth-child(3) {
+    animation-delay: 0.12s !important;
+  }
+  .srow:nth-child(4) {
+    animation-delay: 0.18s !important;
+  }
+  .srow:nth-child(5) {
+    animation-delay: 0.24s !important;
+  }
+  .srow:nth-child(6) {
+    animation-delay: 0.3s !important;
+  }
+  .srow:nth-child(7) {
+    animation-delay: 0.36s !important;
+  }
+  .srow:nth-child(8) {
+    animation-delay: 0.42s !important;
+  }
+  .srow:nth-child(9) {
+    animation-delay: 0.48s !important;
+  }
+  .srow:nth-child(10) {
+    animation-delay: 0.54s !important;
+  }
+  .srow:nth-child(n + 11) {
+    animation-delay: 0.6s !important;
+  }
+
+  /* ---------- header: title flicker + rule that draws itself ---------- */
+  .hdr-line {
+    transform-origin: left;
+  }
+  .hdr-line.fxa {
+    animation: drawA 0.8s 0.15s cubic-bezier(0.7, 0, 0.3, 1) both;
+  }
+  .hdr-line.fxb {
+    animation: drawB 0.8s 0.15s cubic-bezier(0.7, 0, 0.3, 1) both;
+  }
+  .ttl.fxa {
+    animation: flickA 0.7s steps(1, end) both;
+  }
+  .ttl.fxb {
+    animation: flickB 0.7s steps(1, end) both;
+  }
+
+  /* ---------- screen wipe ---------- */
+  .ov {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+  }
+  .strip {
+    flex: 1;
+    background: var(--color-sel-bg);
+    border-bottom: 1px solid var(--color-bg);
+    transform: scaleX(0);
+    transform-origin: var(--o1);
+  }
+  .ov.cover .strip {
+    animation: cover 0.22s cubic-bezier(0.7, 0, 0.3, 1) both;
+    animation-delay: calc(var(--i) * 25ms);
+  }
+  .ov.reveal .strip {
+    transform: scaleX(1);
+    transform-origin: var(--o2);
+    animation: reveal 0.22s cubic-bezier(0.7, 0, 0.3, 1) both;
+    animation-delay: calc(var(--i) * 25ms);
+  }
+  .tl {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--color-sel-ink);
+    letter-spacing: 0.4em;
+    font-size: 14px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ov.cover .tl {
+    animation: tlIn 0.15s 0.2s both;
+  }
+  .ov.reveal .tl {
+    animation: tlOut 0.2s both;
+  }
+  .shake {
+    animation: shake 0.4s steps(2, end) 1;
+  }
+
+  /* ---------- ambient scan band ---------- */
+  .scanband {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: -160px;
+    height: 160px;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0.2;
+    background: linear-gradient(180deg, transparent, var(--color-line), transparent);
+    animation: scan 9s linear infinite;
+  }
+
+  /* ---------- responsive top bar ---------- */
+  .dnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .nier .mbtn {
+    display: none;
+    padding: 0 14px;
+  }
+  .mwrap {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    padding: 8px var(--hp) 0;
+    z-index: 30;
+  }
+  .mnav {
+    max-width: 1240px;
+    margin: 0 auto;
+    animation: menuIn 0.35s cubic-bezier(0.7, 0, 0.3, 1) both;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+  .mnav > .row {
+    animation: slide 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: 0s;
+  }
+  .mnav > .row:nth-child(2) {
+    animation-delay: 0.04s;
+  }
+  .mnav > .row:nth-child(3) {
+    animation-delay: 0.08s;
+  }
+  .mnav > .row:nth-child(4) {
+    animation-delay: 0.12s;
+  }
+  .mnav > .row:nth-child(5) {
+    animation-delay: 0.16s;
+  }
+  .mnav > .row:nth-child(6) {
+    animation-delay: 0.2s;
+  }
+  .mnav > .row:nth-child(7) {
+    animation-delay: 0.24s;
+  }
+  .mnav > .row {
+    min-height: 52px;
+    font-size: 15px;
+  }
+  .mi {
+    position: relative;
+    width: 18px;
+    height: 12px;
+    flex: none;
+    display: block;
+  }
+  .mi i {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: currentColor;
+    transition: transform 0.3s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.2s ease;
+  }
+  .mi i:nth-child(1) {
+    top: 0;
+  }
+  .mi i:nth-child(2) {
+    top: 5px;
+  }
+  .mi i:nth-child(3) {
+    top: 10px;
+  }
+  .mi.open i:nth-child(1) {
+    transform: translateY(5px) rotate(45deg);
+  }
+  .mi.open i:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  .mi.open i:nth-child(3) {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+  .mnav.out {
+    animation: menuOut 0.3s cubic-bezier(0.7, 0, 0.3, 1) both;
+  }
+  .mnav.out > .row {
+    animation: slideOut 0.2s cubic-bezier(0.7, 0, 0.3, 1) both;
+    animation-delay: 0s;
+  }
+  .mnav.out > .row:nth-child(1) {
+    animation-delay: 0.15s;
+  }
+  .mnav.out > .row:nth-child(2) {
+    animation-delay: 0.12s;
+  }
+  .mnav.out > .row:nth-child(3) {
+    animation-delay: 0.09s;
+  }
+  .mnav.out > .row:nth-child(4) {
+    animation-delay: 0.06s;
+  }
+  .mnav.out > .row:nth-child(5) {
+    animation-delay: 0.03s;
+  }
+  .mnav.out > .row:nth-child(6) {
+    animation-delay: 0s;
+  }
+
+  /* Next to this brand name the tabs need ~1244px of bar (plus a scrollbar):
+     below that they collapse into the menu instead of wrapping the bar. */
+  @media (max-width: 1270px) {
+    .nier .dnav {
+      display: none;
+    }
+    .nier .mbtn {
+      display: inline-flex;
+    }
+    .mwrap {
+      display: block;
+    }
+  }
+  /* Spanish labels are longer: slimmer tabs keep them inside the 1240px bar, from ~1315px up. */
+  .nier:lang(es) .navtab {
+    padding: 0 10px;
+  }
+  .nier:lang(es) .navtab::after {
+    left: 10px;
+    right: 10px;
+  }
+  @media (max-width: 1320px) {
+    .nier:lang(es) .dnav {
+      display: none;
+    }
+    .nier:lang(es) .mbtn {
+      display: inline-flex;
+    }
+    .nier:lang(es) .mwrap {
+      display: block;
+    }
+  }
+  @media (max-width: 560px) {
+    .nier {
+      --hp: 16px;
+    }
+    .brandname {
+      font-size: 14px !important;
+      letter-spacing: 0.16em !important;
+    }
+    .bsub {
+      display: none;
+    }
+    .mlabel {
+      display: none;
+    }
+    .nier .mbtn {
+      padding: 0;
+      width: 44px;
+      justify-content: center;
+    }
+  }
+  /* Phones: tighten the brand so it still shares one row with the language switch and menu. */
+  @media (max-width: 430px) {
+    .brandname {
+      font-size: 12px !important;
+      letter-spacing: 0.08em !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blink,
+    .pane > *,
+    .panel > .row,
+    .fxg,
+    .fxs .gauge > div,
+    .fxs .srow,
+    .hdr-line,
+    .ttl,
+    .shake,
+    .scanband,
+    .mnav,
+    .mnav > .row {
+      animation: none !important;
+    }
+    .ov,
+    .scanband {
+      display: none;
+    }
+    .navtab,
+    .navtab::before,
+    .navtab::after,
+    .navtab .num,
+    .btn::before,
+    .btn,
+    .btn .sq,
+    .row,
+    .row .sq,
+    .lg > span,
+    .mi i {
+      transition: none !important;
+    }
+  }
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slide {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+}
+
+/* Each restartable animation exists twice (A/B) so that swapping the class replays it. */
+@keyframes glitchA {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+    clip-path: inset(0 0 100% 0);
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(8px);
+    clip-path: inset(20% 0 55% 0);
+  }
+  26% {
+    opacity: 0.4;
+    transform: translateX(-5px);
+    clip-path: inset(60% 0 10% 0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateX(3px);
+    clip-path: inset(0 0 30% 0);
+  }
+  55% {
+    opacity: 0.6;
+    transform: translateX(-2px);
+    clip-path: inset(0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0);
+  }
+}
+@keyframes glitchB {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+    clip-path: inset(0 0 100% 0);
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(8px);
+    clip-path: inset(20% 0 55% 0);
+  }
+  26% {
+    opacity: 0.4;
+    transform: translateX(-5px);
+    clip-path: inset(60% 0 10% 0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateX(3px);
+    clip-path: inset(0 0 30% 0);
+  }
+  55% {
+    opacity: 0.6;
+    transform: translateX(-2px);
+    clip-path: inset(0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0);
+  }
+}
+@keyframes growA {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes growB {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes slideA {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slideB {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drawA {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes drawB {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes flickA {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  18% {
+    opacity: 0.15;
+  }
+  28% {
+    opacity: 1;
+  }
+  38% {
+    opacity: 0.5;
+  }
+  48%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes flickB {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  18% {
+    opacity: 0.15;
+  }
+  28% {
+    opacity: 1;
+  }
+  38% {
+    opacity: 0.5;
+  }
+  48%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cover {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes reveal {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+@keyframes tlIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes tlOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes scan {
+  to {
+    transform: translateY(calc(100vh + 160px));
+  }
+}
+@keyframes menuIn {
+  from {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0.4;
+  }
+  to {
+    clip-path: inset(0 0 -40px 0);
+    opacity: 1;
+  }
+}
+@keyframes menuOut {
+  from {
+    clip-path: inset(0 0 -40px 0);
+    opacity: 1;
+  }
+  to {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0.4;
+  }
 }
